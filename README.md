@@ -61,9 +61,3 @@ Desenvolvido por Ludivino José Da Silva Estudante de Engenharia - UFSC Ararangu
 Nota: Este é um protótipo acadêmico. Para uso comercial, recomenda-se o aumento do dataset e implementação de segmentação de imagem (YOLO).
 
 
----
-
-### O que fazer agora:
-1. **Crie o arquivo `requirements.txt`:** Na mesma pasta do README, coloque a lista de bibliotecas que te passei antes (tensorflow, streamlit, etc).
-2. **Organize as pastas:** Coloque o seu `app.py` dentro de uma pasta chamada `src`.
-3. **Commit e Push:** Envie tudo para o GitHub.
