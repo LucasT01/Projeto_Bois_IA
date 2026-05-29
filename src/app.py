@@ -14,7 +14,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'monitoramento_bois.db')
 IMG_SAVE_PATH = os.path.join(BASE_DIR, 'fotos_pesagens')
-# Atualizado para buscar o arquivo .tflite do Edge Impulse
+# Configurado para buscar o arquivo .tflite dentro da pasta 'models' na raiz do projeto
 MODEL_PATH = os.path.join(BASE_DIR, '..', 'models', 'model.tflite')
 
 os.makedirs(IMG_SAVE_PATH, exist_ok=True)
@@ -64,24 +64,18 @@ def load_model():
         return None
 
 # ==============================
-# IMAGE PROCESSING
+# IMAGE PROCESSING (CORRIGIDO E ALINHADO)
 # ==============================
 def preprocess_image(img):
     img = np.array(img)
     # Redimensionamento padrão exigido pela CNN do Edge Impulse
     img = cv2.resize(img, (128, 128))
 
-    # Preservação do espaço de cores e tratamento CLAHE original do seu projeto
-    lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
-    l, a, b = cv2.split(lab)
+    # O CLAHE foi removido daqui para garantir que o contraste artificial 
+    # não distorça as features geométricas que a rede convolucional aprendeu.
+    # Mantemos o padrão RGB limpo vindo do PIL/Streamlit.
 
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-    cl = clahe.apply(l)
-
-    limg = cv2.merge((cl,a,b))
-    img = cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
-
-    # Normalização (1./255) alinhada com as features do Edge Impulse
+    # Normalização padrão (1./255) alinhada com as features do Edge Impulse
     return img.astype(np.float32) / 255.0
 
 # ==============================
@@ -161,7 +155,7 @@ if escolha == "Nova Pesagem":
         img = Image.open(foto).convert("RGB")
 
         with col2:
-            st.image(img, width=400) # Ajustado largura fixa segura para layouts modernos do Streamlit
+            st.image(img, width=400) # Mantém layout moderno do Streamlit
 
         if st.button("🚀 Calcular Peso"):
 
@@ -219,6 +213,6 @@ elif escolha == "Histórico":
     conn.close()
 
     if not df.empty:
-        st.dataframe(df, use_container_width=True) # Atualizado parâmetro obsoleto para o Streamlit estável
+        st.dataframe(df, use_container_width=True)
     else:
         st.info("Nenhum registro encontrado no histórico.")
