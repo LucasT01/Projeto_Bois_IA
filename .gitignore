@@ -10,10 +10,8 @@ env/
 .ipynb_checkpoints/
 
 # Datasets (grandes, ficam fora do Git)
-data/edge-impulse-dataset/*
-data/fine-tuning-dataset/*
-!data/edge-impulse-dataset/README.md
-!data/fine-tuning-dataset/README.md
+data/dataset/*
+!data/dataset/README.md
 
 # Sistema
 .DS_Store
