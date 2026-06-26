@@ -15,7 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'monitoramento_bois.db')
 IMG_SAVE_PATH = os.path.join(BASE_DIR, 'fotos_pesagens')
 # Configurado para buscar o arquivo .tflite dentro da pasta 'models' na raiz do projeto
-MODEL_PATH = os.path.join(BASE_DIR, '..', 'models', 'model.tflite')
+MODEL_PATH = os.path.join(BASE_DIR, '..', 'models', 'edge-impulse', 'model.tflite')
 
 os.makedirs(IMG_SAVE_PATH, exist_ok=True)
 
