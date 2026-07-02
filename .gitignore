@@ -20,3 +20,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Dados gerados localmente pela aplicação
+src/monitoramento_bois.db
+src/fotos_pesagens/
