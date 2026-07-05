@@ -24,3 +24,16 @@ Thumbs.db
 # Dados gerados localmente pela aplicação
 src/monitoramento_bois.db
 src/fotos_pesagens/
+
+# Node
+node_modules/
+.expo/
+*.apk
+*.aab
+
+# App desenvolvimento
+desenvolvimento-apk/dist/
+desenvolvimento-apk/node_modules/
+desenvolvimento-apk/ml-service/venv/
+desenvolvimento-apk/ml-service/__pycache__/
+desenvolvimento-apk/ml-service/models/
