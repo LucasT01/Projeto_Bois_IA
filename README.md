@@ -1,209 +1,182 @@
-# Rayvora Vision Pro — Estimativa de Peso Bovino via Visão Computacional
+# Rayvora Vision Pro — Sistema Inteligente de Estimativa de Peso Bovino
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
-![Framework: Streamlit](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)
-![TinyML: Edge Impulse](https://img.shields.io/badge/TinyML-Edge%20Impulse-1BA94C.svg)
+![React](https://img.shields.io/badge/React-18--Vite-61DAFB?logo=react)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs)
+![PWA](https://img.shields.io/badge/PWA-Suportado-orange?logo=pwa)
 ![Status: Em Desenvolvimento](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)
 
-**Autores:** Ludivino José Da Silva, Lucas Teixeira e Pedro Omna
-**Disciplina:** Projeto Integrador I (2026.1) – Engenharia de Computação (UFSC)
+**Autores:** Ludivino José Da Silva, Lucas Teixeira e Pedro Omna  
+**Disciplina:** Projeto Integrador I (2026.1) – Engenharia de Computação (UFSC)  
 
 ---
 
 ## Sobre o Projeto
 
-O **Rayvora Vision Pro** é um sistema inteligente de estimativa de peso de bovinos a partir de imagens, desenvolvido como parte do Projeto Integrador da UFSC. O objetivo é oferecer ao produtor rural uma alternativa de baixo custo e não invasiva à pesagem mecânica tradicional, usando apenas uma foto do animal e um modelo de **Machine Learning (TinyML)** para estimar o peso em quilogramas.
+O **Rayvora Vision Pro** é um ecossistema inteligente de pecuária de precisão focado na estimativa de peso de bovinos a partir de imagens. Desenvolvido como parte do Projeto Integrador da UFSC, o objetivo é oferecer ao produtor rural uma alternativa móvel, de baixo custo e não invasiva à pesagem mecânica tradicional, utilizando apenas a câmera de um smartphone e modelos avançados de **Machine Learning (TinyML)**.
 
-O sistema combina três frentes técnicas:
+Recentemente, a arquitetura do projeto evoluiu de um protótipo em Streamlit para uma aplicação robusta baseada em **Progressive Web App (PWA)** utilizando React e Vite. O sistema agora é dividido em:
 
-1. **Estimativa de peso (Edge Impulse / TinyML):** modelo de regressão treinado com Transfer Learning, atualmente em produção.
-2. **Estimativa de peso (Fine-Tuning):** frente experimental, usando ajuste fino de um modelo pré-treinado (MobileNet) sobre dataset próprio.
-3. **Segmentação de imagem (YOLOv8):** etapa de pré-processamento que isola o boi do fundo da imagem antes da estimativa de peso, aumentando a robustez do sistema.
-
-Os resultados são exibidos em uma interface web (Streamlit), com histórico de pesagens armazenado em banco de dados local e gráficos de evolução de peso por animal.
+1. **Frontend PWA (React + Vite + TypeScript):** Interface ágil, instalável no celular do produtor e otimizada para uso no campo.
+2. **Serviço de IA Backend (`ml-service` em Python):** API assíncrona (FastAPI/Uvicorn) dedicada a carregar o motor de inferência LiteRT e executar a visão computacional.
+3. **Persistência em Nuvem (Firebase/Supabase):** Sincronização de dados e autenticação de usuários estruturada para manter o histórico de medições em tempo real.
 
 ---
 
-## Arquitetura e Conceitos
+## Arquitetura e Pipeline de IA
 
-O projeto segue um pipeline de **Visão Computacional aplicada à pecuária de precisão**, dividido em três módulos independentes:
+O projeto segue um fluxo distribuído em módulos independentes:
 
-1. **Módulo de Segmentação (YOLOv8)**
-   Antes de qualquer estimativa de peso, uma rede de segmentação YOLOv8s-Seg identifica e isola o contorno do animal na imagem, removendo ruído de fundo (cercas, outros animais, vegetação). Isso padroniza a entrada para os modelos de regressão.
+```text
+[ Celular / PWA ] ──(Foto do Bovino)──> [ Backend API:8001 ] ──> [ YOLOv8s-Seg ]
+                                                                        │
+[ Peso na Tela ] <──(Retorno KG + Erro) <── [ LiteRT / MobileNet ] <────┘
 
-2. **Módulo de Estimativa via Edge Impulse (Produção)**
-   Modelo de regressão treinado na plataforma Edge Impulse usando **Transfer Learning** sobre a arquitetura **MobileNet**. É o modelo atualmente utilizado pela aplicação web. Resultado atual: **MAE de 32.87 kg**.
+## Estrutura do Repositório Inicial
 
-3. **Módulo de Estimativa via Fine-Tuning (Experimental)**
-   Frente de pesquisa paralela, em que um modelo MobileNet pré-treinado (obtido de um projeto de referência de outro TCC) passa por **Fine-Tuning** com o dataset próprio da equipe, buscando reduzir ainda mais o erro de estimativa. Resultado atual: **MAE de 47.82 kg** (ainda não supera o modelo de produção).
-
-Cada módulo possui documentação técnica detalhada na sua respectiva pasta (ver seção [Estrutura do Repositório](#estrutura-do-repositório)).
-
----
-
-## Funcionalidades
-
-- **Upload e Estimativa de Peso:** o usuário envia uma foto do animal e o sistema retorna o peso estimado, junto com uma métrica de confiança e margem de erro.
-- **Inferência com Quantificação de Incerteza:** múltiplas inferências com ruído estocástico são realizadas para calcular a confiança da predição e a margem de erro estatística.
-- **Histórico Persistente:** todas as pesagens são salvas em um banco de dados local (SQLite), incluindo brinco do animal, data, peso estimado, confiança, erro e a foto utilizada.
-- **Análise de Evolução:** seleção de um animal já cadastrado para visualizar a curva de ganho de peso ao longo do tempo, com gráfico de linha e estatísticas (peso mínimo, máximo e atual).
-- **Motor Portátil (LiteRT):** inferência executada via `ai-edge-litert`, leve e compatível com ambientes de nuvem com recursos limitados (como o Streamlit Community Cloud).
-
----
-
-## Requisitos de Hardware e Software
-
-### Hardware
-- Computador para desenvolvimento e treinamento (testado em Windows 11).
-- Smartphone ou câmera para captura das imagens dos bovinos.
-- (Opcional, para etapas futuras de TinyML embarcado) Microcontrolador compatível com TensorFlow Lite for Microcontrollers.
-
-### Software
-- **Linguagem:** Python 3.12+
-- **IDE recomendada:** VS Code (com terminal integrado) ou qualquer editor de preferência.
-- **Plataforma de treinamento:** [Edge Impulse](https://edgeimpulse.com/) (conta gratuita) e Google Colab (para o módulo de Fine-Tuning).
-- **Gerenciador de pacotes:** `pip`.
-- **Controle de versão:** `git`.
-
-### Bibliotecas Python (`requirements.txt`)
-
-| Biblioteca | Função no projeto |
-|---|---|
-| `streamlit` | Framework da interface web (upload de imagem, dashboard, histórico) |
-| `ai-edge-litert` | Motor de inferência portátil (LiteRT/TFLite) usado para carregar e executar o modelo `.tflite` do Edge Impulse |
-| `opencv-python-headless` | Processamento digital de imagens (redimensionamento, conversão de espaço de cor) |
-| `numpy` | Operações numéricas e manipulação de arrays (normalização de pixels, cálculo de estatísticas) |
-| `pillow` | Abertura, conversão e manipulação de imagens enviadas pelo usuário |
-| `pandas` | Manipulação de dados tabulares (leitura e exibição do histórico de pesagens) |
-| `matplotlib` | Geração de gráficos auxiliares (quando necessário fora do `st.line_chart` nativo) |
-
-Instalação:
-```sh
-pip install -r requirements.txt
-```
-
-> **Observação:** o módulo de segmentação (YOLOv8) e o notebook de Fine-Tuning utilizam bibliotecas adicionais (`ultralytics`, `torch`, etc.) que **não** fazem parte do `requirements.txt` principal, pois não são necessárias para rodar a aplicação web em produção — são usadas apenas durante o desenvolvimento/treinamento dos modelos (ver READMEs específicos em `models/segmentation/` e `models/fine-tuning/`).
-
----
-
-## Estrutura do Repositório
 Projeto_Bois_IA/
+
+
 
 ├── src/
 
-│   ├── app.py              # Aplicação principal (Streamlit) — ponto de entrada em produção
+
+
+│   ├── app.py              # Aplicação principal (Streamlit) — Durante os Sprints
+
+
 
 │   └── main.py              # Script auxiliar (em avaliação)
 
+
+
 │
+
+
 
 ├── models/
 
+
+
 │   ├── segmentation/         # Modelo YOLOv8 de segmentação do boi na imagem
+
+
 
 │   ├── edge-impulse/         # Modelo de regressão em PRODUÇÃO (Transfer Learning, MAE 32.87 kg)
 
+
+
 │   └── fine-tuning/          # Modelo experimental via Fine-Tuning (MAE 47.82 kg)
 
+
+
 │
+
+
 
 ├── data/
 
+
+
 │   └── dataset/              # Dataset de imagens + pesos reais (fora do Git, ver README da pasta)
 
+
+
 │
+
+
 
 ├── external/
 
+
+
 │   └── TCC_V2-master.zip     # Projeto de referência (TCC de outro grupo) usado como base do Fine-Tuning
+
+
 
 │
 
+
+
 ├── requirements.txt
+
+
 
 ├── .gitignore
 
+
+
 └── README.md
 
-Cada subpasta de `models/` possui seu próprio `README.md` com o passo a passo técnico completo de como aquele modelo específico foi construído, as métricas obtidas e o estado atual (produção ou experimental).
+Módulo de Segmentação (YOLOv8): Antes da estimativa, a rede YOLOv8s-Seg isola o animal na imagem, removendo ruídos de fundo (pastagem, cercas).Módulo de Estimativa via Edge Impulse (Produção): Modelo de regressão (MobileNet) treinado via Transfer Learning, executado no backend. MAE atual: 32.87 kg.Módulo de Estimativa via Fine-Tuning (Experimental): Frente de pesquisa utilizando ajuste fino sobre dataset proprietário. MAE atual: 47.82 kg.FuncionalidadesCaptura Nativa e Upload: Otimizado para bater fotos diretamente do curral pelo navegador do celular.Instalação PWA: Adição à tela inicial do Android/iOS como um aplicativo nativo (ícone, modo tela cheia, service workers).Autenticação: Sistema de login seguro para controle de operadores da fazenda.Histórico Sincronizado: Avaliações salvas em banco de dados em tempo real (Firestore/Supabase).Análise de Evolução: Painéis e gráficos para acompanhar o Ganho
+Médio Diário (GMD) de cada animal identificado.Estrutura do RepositórioAbaixo está a organização atual do código-fonte, contemplando tanto a stack web quanto a inteligência artificial:PlaintextBovinoVision_AI_System/
+├── assets/                   # Imagens e recursos estáticos do projeto
 
----
+├── dev-dist/ / dist/         # Builds de desenvolvimento e produção gerados pelo Vite
 
-## Instalação e Configuração
+├── docs/                     # Documentação adicional do projeto
 
-### Passo 1: Clonar o repositório
+├── ml-service/               # 🧠 Backend Python (API de IA, Modelos LiteRT, YOLO)
 
-```sh
-git clone https://github.com/ludivinojosedasilva/Projeto_Bois_IA.git
-cd Projeto_Bois_IA
-```
+├── public/                   # Arquivos públicos para o Frontend (ícones PWA, manifest)
 
-### Passo 2: Instalar as dependências
+├── src/                      # 💻 Frontend React (Componentes, Views, Estilos, Hooks)
 
-```sh
-pip install -r requirements.txt
-```
+├── server/                   # Utilitários do servidor customizado
 
-### Passo 3: Executar a aplicação
+├── scripts/                  # Scripts auxiliares para execução e deploy
 
-```sh
-streamlit run src/app.py
-```
+├── supabase/                 # Configurações e schemas do banco de dados relacional
 
-A aplicação abrirá automaticamente no navegador, em `http://localhost:8501`.
+├── Protótipo das telas/      # Designs e mockups de interface
 
----
+├── .env / .env.example       # Variáveis de ambiente
 
-## Como Usar
+├── firebase-*.json           # Configurações do Firebase/Firestore
 
-1. **Nova Pesagem**
-   - No menu lateral, selecione **"Nova Pesagem"**.
-   - Informe o identificador do brinco do animal (ex: `BOI_01`).
-   - Faça o upload de uma foto do bovino.
-   - Clique em **"Calcular Peso"**.
-   - O sistema exibirá o peso estimado, a confiança da predição e a margem de erro.
+├── firestore.rules           # Regras de segurança do banco de dados
 
-2. **Histórico**
-   - No menu lateral, selecione a aba de histórico para visualizar todas as pesagens já registradas.
+├── package.json              # Dependências do Node.js (React, Vite, etc.)
 
-3. **Análise de Evolução**
-   - Selecione o brinco de um animal já pesado anteriormente.
-   - Visualize o gráfico de evolução de peso e as estatísticas (peso mínimo, máximo e mais recente).
+├── server.ts                 # Ponto de entrada do servidor Vite em modo dev/SSR
 
----
+├── tsconfig.json             # Configuração do compilador TypeScript
 
-## Modelos e Métricas
+├── vite.config.ts            # Configurações de build e plugins PWA do Vite
 
-| Módulo | Técnica | Status | MAE |
-|---|---|---|---|
-| Edge Impulse | Transfer Learning (MobileNet) | ✅ Produção | 32.87 kg |
-| Fine-Tuning | Fine-Tuning sobre modelo pré-treinado (MobileNet) | 🧪 Experimental | 47.82 kg |
-| Segmentação | YOLOv8s-Seg | ✅ Validado | mAP50: 0.9948 / mAP50-95: 0.9735 |
+└── README.md
 
-Detalhes completos de cada treinamento (hiperparâmetros, datasets, passo a passo) estão documentados nos READMEs de cada subpasta em `models/`.
+Requisitos de Hardware e SoftwareNode.js: Versão 18.x ou superior (para o Frontend React/Vite).Python: Versão 3.12+ (para o Backend ml-service).Smartphone/Navegador: Chrome (Android) ou Safari (iOS) atualizados.
 
----
+Rede: Dispositivos na mesma rede Wi-Fi para testes locais.🛠️ Passo a Passo: Instalação e ConfiguraçãoComo a arquitetura agora é dividida, você precisará configurar o frontend e o backend em paralelo.
 
-## Roadmap (Próximos Passos)
+Passo 1: Clonar o repositórioAbra seu terminal e clone o projeto:Bashgit clone [https://github.com/seu-usuario/BovinoVision_AI_System.git](https://github.com/seu-usuario/BovinoVision_AI_System.git)
+cd BovinoVision_AI_System
 
-- Reduzir o MAE do modelo de Fine-Tuning para que supere o modelo atual em produção.
-- Integrar a etapa de segmentação (YOLOv8) ao pipeline da aplicação web, isolando o boi do fundo antes da estimativa de peso.
-- Avaliar viabilidade de embarcar o pipeline completo (segmentação + regressão) em ambientes com recursos limitados.
-- Expandir o dataset com mais imagens e condições de captura (iluminação, ângulo, raça).
+Passo 2: Configurar o Backend de Inteligência Artificial (ml-service)Este serviço em Python processa as imagens e calcula os pesos.Abra um terminal e acesse a pasta do serviço:Bashcd ml-service
 
----
+Crie e ative um ambiente virtual:Bashpython -m venv venv
 
-## Licença
+# No Windows:
+venv\Scripts\activate
 
-Este projeto está licenciado sob a **MIT License**. Veja o arquivo `LICENSE` para mais detalhes.
+# No Linux/Mac:
+source venv/bin/activate
 
----
+Instale as dependências de IA:Bashpip install -r requirements.txt
 
-## Autores
+Inicie o servidor FastAPI/Uvicorn na porta 8001:Bashuvicorn main:app --host 0.0.0.0 --port 8001
 
-* **Ludivino José Da Silva**
-* **Lucas Teixeira**
-* **Pedro Omna**
+(Deixe este terminal aberto rodando em segundo plano).
 
-*Projeto Integrador I — Engenharia de Computação, UFSC (2026.1).*
+Passo 3: Configurar o Frontend Web e PWA (React)Volte para a raiz do projeto (ou abra um segundo terminal na raiz
+C:\BovinoVision_AI_System).Instale as dependências do Node.js:Bashnpm install
+
+Configure as Variáveis de Ambiente:Copie o arquivo .env.example e renomeie para .env.Preencha com as chaves do Firebase/Supabase e defina a URL da API do backend local (ex: VITE_API_URL=http://<SEU_IP_AQUI>:8001).Inicie o servidor de desenvolvimento Vite (server.ts):Bashnpm run dev
+O frontend estará acessível em http://localhost:3000.
+
+Passo 4: Como Testar no Celular (Rede Local)Para usar a câmera do celular e testar o PWA na mesma rede Wi-Fi que o seu computador:Descubra o IP do PC: Abra um terminal e rode ipconfig (Windows). Anote o IPv4 (ex: 192.168.0.105).Libere o Firewall (Apenas Windows): Abra o PowerShell como Administrador e rode:PowerShellNew-NetFirewallRule -DisplayName "Rayvora Dev 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
+New-NetFirewallRule -DisplayName "Rayvora Dev 8001" -Direction Inbound -LocalPort 8001 -Protocol TCP -Action Allow
+
+Acesse no Smartphone: Abra o navegador e digite: http://SEU_IP:3000.Instale o App: Toque no menu do navegador e selecione "Adicionar à Tela Inicial".Modelos e MétricasMóduloTécnicaStatusErro Absoluto Médio (MAE)Edge ImpulseTransfer Learning (MobileNet)✅ Produção32.87 kgFine-TuningAjuste fino customizado (MobileNet)🧪 Experimental47.82 kgSegmentaçãoYOLOv8s-Seg✅ ValidadomAP50: 0.9948 / mAP50-95: 0.9735LicençaEste projeto está licenciado sob a MIT License. Veja o arquivo LICENSE para mais detalhes.
