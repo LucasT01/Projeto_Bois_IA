@@ -173,10 +173,12 @@ Inicie o servidor FastAPI/Uvicorn na porta 8001:Bashuvicorn main:app --host 0.0.
 Passo 3: Configurar o Frontend Web e PWA (React)Volte para a raiz do projeto (ou abra um segundo terminal na raiz
 C:\BovinoVision_AI_System).Instale as dependências do Node.js:Bashnpm install
 
-Configure as Variáveis de Ambiente:Copie o arquivo .env.example e renomeie para .env.Preencha com as chaves do Firebase/Supabase e defina a URL da API do backend local (ex: VITE_API_URL=http://<SEU_IP_AQUI>:8001).Inicie o servidor de desenvolvimento Vite (server.ts):Bashnpm run dev
+Configure as Variáveis de Ambiente:Copie o arquivo .env.example e renomeie para .env.
+Preencha com as chaves do Firebase/Supabase e defina a URL da API do backend local (ex: VITE_API_URL=http://<SEU_IP_AQUI>:8001).Inicie o servidor de desenvolvimento Vite (server.ts):Bashnpm run dev
 O frontend estará acessível em http://localhost:3000.
 
-Passo 4: Como Testar no Celular (Rede Local)Para usar a câmera do celular e testar o PWA na mesma rede Wi-Fi que o seu computador:Descubra o IP do PC: Abra um terminal e rode ipconfig (Windows). Anote o IPv4 (ex: 192.168.0.105).Libere o Firewall (Apenas Windows): Abra o PowerShell como Administrador e rode:PowerShellNew-NetFirewallRule -DisplayName "Rayvora Dev 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
+Passo 4: Como Testar no Celular (Rede Local)Para usar a câmera do celular e testar o PWA na mesma rede Wi-Fi que o seu computador:Descubra o IP do PC: Abra um terminal e rode ipconfig (Windows). Anote o IPv4 (ex: 192.168.0.105).
+Libere o Firewall (Apenas Windows): Abra o PowerShell como Administrador e rode:PowerShellNew-NetFirewallRule -DisplayName "Rayvora Dev 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
 New-NetFirewallRule -DisplayName "Rayvora Dev 8001" -Direction Inbound -LocalPort 8001 -Protocol TCP -Action Allow
 
 Acesse no Smartphone: Abra o navegador e digite: http://SEU_IP:3000.Instale o App: Toque no menu do navegador e selecione "Adicionar à Tela Inicial".Modelos e MétricasMóduloTécnicaStatusErro Absoluto Médio (MAE)Edge ImpulseTransfer Learning (MobileNet)✅ Produção32.87 kgFine-TuningAjuste fino customizado (MobileNet)🧪 Experimental47.82 kgSegmentaçãoYOLOv8s-Seg✅ ValidadomAP50: 0.9948 / mAP50-95: 0.9735LicençaEste projeto está licenciado sob a MIT License. Veja o arquivo LICENSE para mais detalhes.
