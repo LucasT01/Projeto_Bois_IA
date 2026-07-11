@@ -26,11 +26,12 @@ O modelo **não substitui** o modelo de predição de peso (Edge Impulse) — el
 
 ## Dataset
 
-- **Origem:** Dataset público do Kaggle, com imagens de bovinos anotadas no formato YOLO
 - **Total de imagens válidas após limpeza:** ~6.009 (treino) / 1.503 (validação)
 - **Divisão:** 80% treino / 20% validação
 - **Formato das anotações:** YOLO segmentação (.txt com polígonos normalizados)
 - **Resolução de entrada:** 640×640 px (redimensionamento automático)
+
+  Ver `data/dataset-seg/README.md`
 
 ### Limpeza realizada antes do treino
 
