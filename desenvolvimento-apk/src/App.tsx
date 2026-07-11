@@ -36,6 +36,11 @@ import {
   getDocFromServer 
 } from 'firebase/firestore';
 
+// Desativa a persistência de dados no Firestore (leitura/escrita de registros,
+// perfil e notificações), mantendo o login por Google (Firebase Auth) funcionando
+// normalmente. Os dados passam a viver só no Supabase + localStorage.
+const FIRESTORE_DATA_ENABLED = false;
+
 
 /**
  * Cleanly parses the Portuguese/English date string (e.g. "22 Mai 2026, 09:20" or "11 de jun de 2026, 19:19") 
@@ -316,7 +321,7 @@ export default function App() {
     let unsubscribeSupabase: (() => void) | null = null;
 
     // Real connection verification test
-    if (isFirebaseConfigured && db) {
+    if (FIRESTORE_DATA_ENABLED && isFirebaseConfigured && db) {
       const testConnection = async () => {
         try {
           await getDocFromServer(doc(db, 'test', 'connection'));
@@ -341,7 +346,7 @@ export default function App() {
           if (isSupabaseConfigured && supabase) {
             await syncSupabaseData(user.uid, user.email || '', user.displayName || undefined);
             setAuthInitializing(false);
-          } else if (isFirebaseConfigured && db) {
+          } else if (FIRESTORE_DATA_ENABLED && isFirebaseConfigured && db)  {
             console.log("Database: Firebase driver active. Synchronizing snapshots...");
             // Subscribe and synchronize user profile info
             const userDocRef = doc(db, 'users', user.uid);

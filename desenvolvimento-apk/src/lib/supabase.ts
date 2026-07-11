@@ -55,6 +55,7 @@ export function mapToSupabaseRecord(r: CattleRecord, userId: string) {
   return {
     id: r.id,
     user_id: userId,
+    animal_id: r.animalId || '', // brinco — corrigido: antes não era enviado ao Supabase
     photo_url: r.photoUrl || '',
     date: r.date || '',
     lot: r.lot || '',
@@ -72,6 +73,7 @@ export function mapToSupabaseRecord(r: CattleRecord, userId: string) {
 export function mapFromSupabaseRecord(d: any): CattleRecord {
   return {
     id: d.id,
+    animalId: d.animal_id || '', // brinco — corrigido: antes não era lido de volta do Supabase
     photoUrl: d.photo_url || '',
     date: d.date || '',
     lot: d.lot || '',

@@ -59,6 +59,7 @@ export interface FirestoreErrorInfo {
 
 /**
  * Standard security diagnostics error handler to fulfill compliance mandates.
+ * Apenas registra o erro no console — NÃO interrompe o fluxo do app.
  */
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
@@ -78,5 +79,5 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
   console.error('[Diagnostic System] Firestore Security Check Failed: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Removido o "throw" — esse erro é apenas diagnóstico e não deve travar o restante do app.
 }
