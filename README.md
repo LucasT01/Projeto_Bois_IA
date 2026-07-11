@@ -2,25 +2,27 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
-![React](https://img.shields.io/badge/React-18--Vite-61DAFB?logo=react)
+![React](https://img.shields.io/badge/React-18%20%2B%20Vite-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs)
+![TinyML: Edge Impulse](https://img.shields.io/badge/TinyML-Edge%20Impulse-1BA94C.svg)
 ![PWA](https://img.shields.io/badge/PWA-Suportado-orange?logo=pwa)
 ![Status: Em Desenvolvimento](https://img.shields.io/badge/Status-Em%20Desenvolvimento-yellow.svg)
 
-**Autores:** Ludivino José Da Silva, Lucas Teixeira e Pedro Omna  
-**Disciplina:** Projeto Integrador I (2026.1) – Engenharia de Computação (UFSC)  
+**Autores:** Ludivino José Da Silva, Lucas Teixeira e Pedro Omna
+**Disciplina:** Projeto Integrador I (2026.1) – Engenharia de Computação (UFSC)
 
 ---
 
 ## Sobre o Projeto
 
-O **Rayvora Vision Pro** é um ecossistema inteligente de pecuária de precisão focado na estimativa de peso de bovinos a partir de imagens. Desenvolvido como parte do Projeto Integrador da UFSC, o objetivo é oferecer ao produtor rural uma alternativa móvel, de baixo custo e não invasiva à pesagem mecânica tradicional, utilizando apenas a câmera de um smartphone e modelos avançados de **Machine Learning (TinyML)**.
+O **Rayvora Vision Pro** é um ecossistema inteligente de pecuária de precisão focado na estimativa de peso de bovinos a partir de imagens. Desenvolvido como parte do Projeto Integrador da UFSC, o objetivo é oferecer ao produtor rural uma alternativa móvel, de baixo custo e não invasiva à pesagem mecânica tradicional — utilizando apenas a câmera de um smartphone e modelos avançados de **Machine Learning (TinyML)**.
 
-Recentemente, a arquitetura do projeto evoluiu de um protótipo em Streamlit para uma aplicação robusta baseada em **Progressive Web App (PWA)** utilizando React e Vite. O sistema agora é dividido em:
+A arquitetura do projeto evoluiu de um protótipo inicial em Streamlit (usado durante os Sprints de desenvolvimento e validação dos modelos de IA) para uma aplicação robusta baseada em **Progressive Web App (PWA)** com React e Vite. O sistema é dividido em três camadas principais:
 
-1. **Frontend PWA (React + Vite + TypeScript):** Interface ágil, instalável no celular do produtor e otimizada para uso no campo.
-2. **Serviço de IA Backend (`ml-service` em Python):** API assíncrona (FastAPI/Uvicorn) dedicada a carregar o motor de inferência LiteRT e executar a visão computacional.
-3. **Persistência em Nuvem (Firebase/Supabase):** Sincronização de dados e autenticação de usuários estruturada para manter o histórico de medições em tempo real.
+1. **Frontend PWA (React + Vite + TypeScript):** Interface moderna, instalável no celular do produtor e otimizada para uso no campo.
+2. **Backend de IA (`ml-service` em Python / FastAPI):** API assíncrona dedicada a carregar o motor de inferência LiteRT e executar a visão computacional.
+3. **Persistência em Nuvem (Firebase / Supabase):** Sincronização de dados e autenticação de usuários para manter o histórico de pesagens em tempo real.
 
 ---
 
@@ -28,157 +30,266 @@ Recentemente, a arquitetura do projeto evoluiu de um protótipo em Streamlit par
 
 O projeto segue um fluxo distribuído em módulos independentes:
 
-```text
-[ Celular / PWA ] ──(Foto do Bovino)──> [ Backend API:8001 ] ──> [ YOLOv8s-Seg ]
-                                                                        │
-[ Peso na Tela ] <──(Retorno KG + Erro) <── [ LiteRT / MobileNet ] <────┘
+```
+[ Celular / PWA ]
+       │
+       │  1. Usuário tira ou envia foto do bovino
+       ▼
+[ Backend API Python — porta 8001 ]
+       │
+       │  2. YOLOv8s-Seg isola o animal na imagem
+       │  3. LiteRT / MobileNet calcula o peso
+       ▼
+[ Resposta: Peso (kg) + Confiança + Margem de Erro ]
+       │
+       ▼
+[ Frontend PWA — exibe resultado e salva no Firebase/Supabase ]
+```
 
-## Estrutura do Repositório Inicial
+### Módulos de IA
 
+**1. Módulo de Segmentação (YOLOv8)**
+Antes da estimativa de peso, a rede YOLOv8s-Seg identifica e isola o contorno do animal na imagem, removendo ruído de fundo (pastagem, cercas, outros animais). Isso padroniza a entrada para os modelos de regressão e aumenta significativamente a robustez do sistema em condições de campo.
+
+**2. Módulo de Estimativa via Edge Impulse (Produção)**
+Modelo de regressão treinado na plataforma Edge Impulse usando **Transfer Learning** sobre a arquitetura **MobileNet**. É o motor de IA atualmente em produção. Resultado: **MAE de 32.87 kg**.
+
+**3. Módulo de Estimativa via Fine-Tuning (Experimental)**
+Frente de pesquisa paralela em que um modelo MobileNet pré-treinado (obtido de um projeto de referência de outro TCC) passa por **Fine-Tuning** com o dataset próprio da equipe. Resultado atual: **MAE de 47.82 kg** — ainda não supera o modelo de produção, mas está em refinamento contínuo.
+
+Cada módulo possui documentação técnica detalhada na sua respectiva pasta em `models/`.
+
+---
+
+## Funcionalidades
+
+- **Captura Nativa e Upload de Imagem:** Otimizado para fotografar o bovino diretamente do curral pelo navegador do celular, sem necessidade de instalar nada além do PWA.
+- **Instalação como App (PWA):** O sistema pode ser adicionado à tela inicial do Android ou iOS como um aplicativo nativo, com ícone próprio, modo tela cheia e funcionamento offline parcial via Service Workers.
+- **Estimativa de Peso com IA:** O backend processa a imagem com YOLOv8 (segmentação) + LiteRT (regressão), retornando o peso estimado, a confiança da predição e a margem de erro estatística.
+- **Status de Aptidão para Abate:** O sistema classifica automaticamente o animal como **APTO** (peso ≥ 380 kg) ou **NÃO APTO** (peso < 380 kg) para abate.
+- **Autenticação de Usuários:** Sistema de login seguro para controle de operadores da fazenda.
+- **Histórico Sincronizado em Nuvem:** Pesagens salvas em banco de dados em tempo real (Firebase Firestore / Supabase), acessíveis de qualquer dispositivo.
+- **Análise de Evolução:** Painéis e gráficos para acompanhar o Ganho Médio Diário (GMD) e a evolução de peso de cada animal ao longo do tempo.
+
+---
+
+## Requisitos de Hardware e Software
+
+### Hardware
+- Computador para desenvolvimento (testado em Windows 11).
+- Smartphone com Chrome (Android) ou Safari (iOS) atualizados.
+- Dispositivos na mesma rede Wi-Fi para testes locais.
+
+### Software — Backend (Python)
+- **Python:** 3.12+
+- **Gerenciador de pacotes:** `pip`
+
+### Software — Frontend (Node.js)
+- **Node.js:** 18.x ou superior
+- **Gerenciador de pacotes:** `npm`
+
+### Ferramentas adicionais
+- **Plataforma de treinamento de IA:** [Edge Impulse](https://edgeimpulse.com/) e Google Colab
+- **Banco de dados:** Firebase Firestore e/ou Supabase
+- **Controle de versão:** `git`
+- **IDE recomendada:** VS Code
+
+### Bibliotecas Python — Backend (`ml-service/requirements.txt`)
+
+| Biblioteca | Função no projeto |
+|---|---|
+| `fastapi` | Framework da API REST assíncrona do backend de IA |
+| `uvicorn` | Servidor ASGI para executar a API FastAPI |
+| `ai-edge-litert` | Motor de inferência portátil (LiteRT/TFLite) para executar o modelo `.tflite` |
+| `opencv-python-headless` | Processamento digital de imagens (redimensionamento, conversão de espaço de cor) |
+| `numpy` | Operações numéricas e manipulação de arrays (normalização de pixels, estatísticas) |
+| `pillow` | Abertura, conversão e manipulação de imagens enviadas pelo usuário |
+| `python-multipart` | Suporte ao recebimento de imagens via `multipart/form-data` na API |
+| `ultralytics` | Biblioteca do YOLOv8 para segmentação do bovino na imagem |
+
+### Bibliotecas Node.js — Frontend (`package.json`)
+
+| Biblioteca | Função no projeto |
+|---|---|
+| `react` + `react-dom` | Framework principal do frontend |
+| `vite` | Bundler e servidor de desenvolvimento ultrarrápido |
+| `typescript` | Tipagem estática do código JavaScript |
+| `firebase` | SDK do Firebase para autenticação e Firestore |
+| `@supabase/supabase-js` | SDK do Supabase para banco de dados relacional |
+| `vite-plugin-pwa` | Plugin para transformar o app em PWA (manifest, service worker) |
+
+---
+
+## Estrutura do Repositório
+
+```
 Projeto_Bois_IA/
-
-
-
-├── src/
-
-
-
-│   ├── app.py              # Aplicação principal (Streamlit) — Durante os Sprints
-
-
-
-│   └── main.py              # Script auxiliar (em avaliação)
-
-
-
 │
-
-
-
-├── models/
-
-
-
-│   ├── segmentation/         # Modelo YOLOv8 de segmentação do boi na imagem
-
-
-
-│   ├── edge-impulse/         # Modelo de regressão em PRODUÇÃO (Transfer Learning, MAE 32.87 kg)
-
-
-
-│   └── fine-tuning/          # Modelo experimental via Fine-Tuning (MAE 47.82 kg)
-
-
-
+├── desenvolvimento-apk/          # 📱 App PWA (React + Vite + TypeScript)
+│   ├── src/                      # Código-fonte do frontend
+│   │   ├── components/           # Componentes React (telas, modais, sidebar)
+│   │   ├── lib/                  # Integrações (Firebase, Supabase)
+│   │   ├── assets/               # Imagens e recursos estáticos
+│   │   └── App.tsx               # Componente raiz da aplicação
+│   ├── ml-service/               # 🧠 Backend Python (API de IA)
+│   │   ├── main.py               # API FastAPI com endpoint de predição
+│   │   └── requirements.txt      # Dependências Python do backend
+│   ├── public/                   # Ícones PWA e service worker
+│   ├── supabase/                 # Schema e migrations do banco relacional
+│   ├── Prototipo-das-telas/      # Mockups e protótipos de interface
+│   ├── firebase-applet-config.json
+│   ├── firestore.rules           # Regras de segurança do Firestore
+│   ├── package.json              # Dependências Node.js
+│   ├── vite.config.ts            # Configuração do Vite e PWA
+│   └── tsconfig.json
 │
-
-
-
+├── models/                       # 🤖 Modelos de IA treinados
+│   ├── segmentation/             # YOLOv8s-Seg (mAP50: 0.9948)
+│   ├── edge-impulse/             # Modelo em PRODUÇÃO (MAE: 32.87 kg)
+│   └── fine-tuning/              # Modelo experimental (MAE: 47.82 kg)
+│
+├── src/                          # 🔬 Protótipo Streamlit (usado nos Sprints iniciais)
+│   ├── app.py                    # Interface Streamlit de validação dos modelos
+│   └── main.py                   # Script auxiliar
+│
 ├── data/
-
-
-
-│   └── dataset/              # Dataset de imagens + pesos reais (fora do Git, ver README da pasta)
-
-
-
+│   └── dataset/                  # Dataset de imagens (fora do Git — ver README)
 │
-
-
-
 ├── external/
-
-
-
-│   └── TCC_V2-master.zip     # Projeto de referência (TCC de outro grupo) usado como base do Fine-Tuning
-
-
-
+│   └── TCC_V2-master.zip         # Projeto de referência usado como base do Fine-Tuning
 │
-
-
-
-├── requirements.txt
-
-
-
+├── requirements.txt              # Dependências Python do protótipo Streamlit
 ├── .gitignore
-
-
-
+├── LICENSE
 └── README.md
+```
 
-Módulo de Segmentação (YOLOv8): Antes da estimativa, a rede YOLOv8s-Seg isola o animal na imagem, removendo ruídos de fundo (pastagem, cercas).Módulo de Estimativa via Edge Impulse (Produção): Modelo de regressão (MobileNet) treinado via Transfer Learning, executado no backend. MAE atual: 32.87 kg.Módulo de Estimativa via Fine-Tuning (Experimental): Frente de pesquisa utilizando ajuste fino sobre dataset proprietário. MAE atual: 47.82 kg.FuncionalidadesCaptura Nativa e Upload: Otimizado para bater fotos diretamente do curral pelo navegador do celular.Instalação PWA: Adição à tela inicial do Android/iOS como um aplicativo nativo (ícone, modo tela cheia, service workers).Autenticação: Sistema de login seguro para controle de operadores da fazenda.Histórico Sincronizado: Avaliações salvas em banco de dados em tempo real (Firestore/Supabase).Análise de Evolução: Painéis e gráficos para acompanhar o Ganho
-Médio Diário (GMD) de cada animal identificado.Estrutura do RepositórioAbaixo está a organização atual do código-fonte, contemplando tanto a stack web quanto a inteligência artificial:PlaintextBovinoVision_AI_System/
-├── assets/                   # Imagens e recursos estáticos do projeto
+---
 
-├── dev-dist/ / dist/         # Builds de desenvolvimento e produção gerados pelo Vite
+## Instalação e Configuração
 
-├── docs/                     # Documentação adicional do projeto
+Como a arquitetura é dividida entre frontend e backend, você precisará configurar os dois em paralelo.
 
-├── ml-service/               # 🧠 Backend Python (API de IA, Modelos LiteRT, YOLO)
+### Passo 1: Clonar o repositório
 
-├── public/                   # Arquivos públicos para o Frontend (ícones PWA, manifest)
+```sh
+git clone https://github.com/ludivinojosedasilva/Projeto_Bois_IA.git
+cd Projeto_Bois_IA
+```
 
-├── src/                      # 💻 Frontend React (Componentes, Views, Estilos, Hooks)
+### Passo 2: Configurar o Backend de IA (`ml-service`)
 
-├── server/                   # Utilitários do servidor customizado
+```sh
+cd desenvolvimento-apk/ml-service
 
-├── scripts/                  # Scripts auxiliares para execução e deploy
+# Criar e ativar ambiente virtual
+python -m venv venv
 
-├── supabase/                 # Configurações e schemas do banco de dados relacional
-
-├── Protótipo das telas/      # Designs e mockups de interface
-
-├── .env / .env.example       # Variáveis de ambiente
-
-├── firebase-*.json           # Configurações do Firebase/Firestore
-
-├── firestore.rules           # Regras de segurança do banco de dados
-
-├── package.json              # Dependências do Node.js (React, Vite, etc.)
-
-├── server.ts                 # Ponto de entrada do servidor Vite em modo dev/SSR
-
-├── tsconfig.json             # Configuração do compilador TypeScript
-
-├── vite.config.ts            # Configurações de build e plugins PWA do Vite
-
-└── README.md
-
-Requisitos de Hardware e SoftwareNode.js: Versão 18.x ou superior (para o Frontend React/Vite).Python: Versão 3.12+ (para o Backend ml-service).Smartphone/Navegador: Chrome (Android) ou Safari (iOS) atualizados.
-
-Rede: Dispositivos na mesma rede Wi-Fi para testes locais.🛠️ Passo a Passo: Instalação e ConfiguraçãoComo a arquitetura agora é dividida, você precisará configurar o frontend e o backend em paralelo.
-
-Passo 1: Clonar o repositórioAbra seu terminal e clone o projeto:Bashgit clone [https://github.com/seu-usuario/BovinoVision_AI_System.git](https://github.com/seu-usuario/BovinoVision_AI_System.git)
-cd BovinoVision_AI_System
-
-Passo 2: Configurar o Backend de Inteligência Artificial (ml-service)Este serviço em Python processa as imagens e calcula os pesos.Abra um terminal e acesse a pasta do serviço:Bashcd ml-service
-
-Crie e ative um ambiente virtual:Bashpython -m venv venv
-
-# No Windows:
+# Windows:
 venv\Scripts\activate
 
-# No Linux/Mac:
+# Linux/Mac:
 source venv/bin/activate
 
-Instale as dependências de IA:Bashpip install -r requirements.txt
+# Instalar dependências
+pip install -r requirements.txt
 
-Inicie o servidor FastAPI/Uvicorn na porta 8001:Bashuvicorn main:app --host 0.0.0.0 --port 8001
+# Iniciar a API na porta 8001
+uvicorn main:app --host 0.0.0.0 --port 8001
+```
 
-(Deixe este terminal aberto rodando em segundo plano).
+Deixe este terminal aberto. A API ficará disponível em `http://localhost:8001`. Para testar, acesse `http://localhost:8001/docs` — o FastAPI gera uma interface de teste automática.
 
-Passo 3: Configurar o Frontend Web e PWA (React)Volte para a raiz do projeto (ou abra um segundo terminal na raiz
-C:\BovinoVision_AI_System).Instale as dependências do Node.js:Bashnpm install
+### Passo 3: Configurar o Frontend PWA
 
-Configure as Variáveis de Ambiente:Copie o arquivo .env.example e renomeie para .env.
-Preencha com as chaves do Firebase/Supabase e defina a URL da API do backend local (ex: VITE_API_URL=http://<SEU_IP_AQUI>:8001).Inicie o servidor de desenvolvimento Vite (server.ts):Bashnpm run dev
-O frontend estará acessível em http://localhost:3000.
+Abra um **segundo terminal** na raiz do projeto:
 
-Passo 4: Como Testar no Celular (Rede Local)Para usar a câmera do celular e testar o PWA na mesma rede Wi-Fi que o seu computador:Descubra o IP do PC: Abra um terminal e rode ipconfig (Windows). Anote o IPv4 (ex: 192.168.0.105).
-Libere o Firewall (Apenas Windows): Abra o PowerShell como Administrador e rode:PowerShellNew-NetFirewallRule -DisplayName "Rayvora Dev 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
+```sh
+cd desenvolvimento-apk
+
+# Instalar dependências Node.js
+npm install
+
+# Configurar variáveis de ambiente
+# Copie o .env.example e renomeie para .env
+# Preencha com as chaves do Firebase/Supabase e a URL do backend:
+# VITE_API_URL=http://<SEU_IP>:8001
+
+# Iniciar o servidor de desenvolvimento
+npm run dev
+```
+
+O frontend estará acessível em `http://localhost:3000`.
+
+### Passo 4: Testar no Celular (Rede Local)
+
+Para usar a câmera do celular e testar o PWA:
+
+1. **Descubra o IP do PC:** Abra o terminal e rode `ipconfig` (Windows). Anote o IPv4 (ex: `192.168.0.105`).
+
+2. **Libere o Firewall (Windows):** Abra o PowerShell como Administrador e rode:
+
+```powershell
+New-NetFirewallRule -DisplayName "Rayvora Dev 3000" -Direction Inbound -LocalPort 3000 -Protocol TCP -Action Allow
 New-NetFirewallRule -DisplayName "Rayvora Dev 8001" -Direction Inbound -LocalPort 8001 -Protocol TCP -Action Allow
+```
 
-Acesse no Smartphone: Abra o navegador e digite: http://SEU_IP:3000.Instale o App: Toque no menu do navegador e selecione "Adicionar à Tela Inicial".Modelos e MétricasMóduloTécnicaStatusErro Absoluto Médio (MAE)Edge ImpulseTransfer Learning (MobileNet)✅ Produção32.87 kgFine-TuningAjuste fino customizado (MobileNet)🧪 Experimental47.82 kgSegmentaçãoYOLOv8s-Seg✅ ValidadomAP50: 0.9948 / mAP50-95: 0.9735LicençaEste projeto está licenciado sob a MIT License. Veja o arquivo LICENSE para mais detalhes.
+3. **Acesse no Smartphone:** Abra o navegador e acesse `http://SEU_IP:3000`.
+
+4. **Instale o App:** Toque no menu do navegador e selecione **"Adicionar à Tela Inicial"**.
+
+---
+
+## Como Usar
+
+1. **Login:** Acesse o app e entre com suas credenciais de operador.
+
+2. **Nova Pesagem:**
+   - Toque em **"Nova Avaliação"**.
+   - Informe o identificador do brinco do animal (ex: `BOI_01`).
+   - Tire uma foto ou faça upload de uma imagem do bovino.
+   - O sistema processa a imagem e exibe o peso estimado, a confiança e o status de aptidão para abate.
+
+3. **Histórico:**
+   - Acesse a aba de histórico para visualizar todas as pesagens registradas, sincronizadas em tempo real com o banco de dados.
+
+4. **Análise de Evolução:**
+   - Selecione um animal pelo brinco para visualizar o gráfico de evolução de peso ao longo do tempo e as estatísticas de ganho médio diário (GMD).
+
+---
+
+## Modelos e Métricas
+
+| Módulo | Técnica | Status | Resultado |
+|---|---|---|---|
+| Edge Impulse | Transfer Learning (MobileNet) | ✅ Produção | MAE: 32.87 kg |
+| Fine-Tuning | Ajuste fino customizado (MobileNet) | 🧪 Experimental | MAE: 47.82 kg |
+| Segmentação | YOLOv8s-Seg | ✅ Validado | mAP50: 0.9948 / mAP50-95: 0.9735 |
+
+Detalhes completos de cada treinamento (hiperparâmetros, datasets, passo a passo) estão documentados nos READMEs de cada subpasta em `models/`.
+
+---
+
+## Roadmap (Próximos Passos)
+
+- Reduzir o MAE do modelo de Fine-Tuning para superar o modelo atual em produção.
+- Integrar o módulo de segmentação YOLOv8 ao pipeline do backend (`ml-service`), isolando o boi automaticamente antes da estimativa.
+- Publicar o backend de IA em servidor de nuvem (Railway ou Render) para funcionamento em produção sem depender de rede local.
+- Gerar o build de produção do PWA (`npm run build`) e hospedar o frontend.
+- Expandir o dataset com mais imagens, raças e condições de captura (iluminação, ângulo, distância).
+
+---
+
+## Licença
+
+Este projeto está licenciado sob a **MIT License**. Veja o arquivo `LICENSE` para mais detalhes.
+
+---
+
+## Autores
+
+* **Ludivino José Da Silva**
+* **Lucas Teixeira**
+* **Pedro Omna**
+
+*Projeto Integrador I — Engenharia de Computação, UFSC (2026.1).*
